@@ -1,11 +1,14 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGame } from '@/hooks/useGame';
 import { HopInput } from '@/components/HopInput';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { OnboardingModal } from '@/components/OnboardingModal';
 
 export default function Home() {
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
   const {
     gameState,
     validationLoading,
@@ -20,6 +23,19 @@ export default function Home() {
     undoLastStep,
   } = useGame();
 
+  // Check if user is first time and show onboarding
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem('magiclink-onboarding-seen');
+    if (!hasSeenOnboarding) {
+      setShowOnboarding(true);
+    }
+  }, []);
+
+  const handleCloseOnboarding = () => {
+    localStorage.setItem('magiclink-onboarding-seen', 'true');
+    setShowOnboarding(false);
+  };
+
   const {
     startWord,
     endWord,
@@ -28,6 +44,7 @@ export default function Home() {
     isComplete,
     isLoading,
     error,
+    solution,
     level,
     maxSteps,
     score,
@@ -65,6 +82,30 @@ export default function Home() {
               </div>
               
               <div className="space-y-4 mb-8">
+                {/* Show solution if available */}
+                {solution.length > 0 && (
+                  <div className="bg-white/10 rounded-2xl p-4">
+                    <div className="text-white/60 text-sm mb-3">One Possible Solution</div>
+                    <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
+                      <span className="px-3 py-1 bg-blue-500/20 rounded-full text-blue-300 font-medium">
+                        {startWord}
+                      </span>
+                      {solution.map((word, index) => (
+                        <React.Fragment key={index}>
+                          <span className="text-white/40">→</span>
+                          <span className="px-3 py-1 bg-purple-500/20 rounded-full text-purple-300 font-medium">
+                            {word}
+                          </span>
+                        </React.Fragment>
+                      ))}
+                      <span className="text-white/40">→</span>
+                      <span className="px-3 py-1 bg-green-500/20 rounded-full text-green-300 font-medium">
+                        {endWord}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="bg-white/10 rounded-2xl p-4">
                   <div className="text-white/60 text-sm">Final Score</div>
                   <div className="text-2xl font-bold text-yellow-400">{score}</div>
@@ -108,6 +149,28 @@ export default function Home() {
               </div>
               
               <div className="space-y-4 mb-8">
+                {/* Solution Path */}
+                <div className="bg-white/10 rounded-2xl p-4">
+                  <div className="text-white/60 text-sm mb-3">Your Solution Path</div>
+                  <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
+                    <span className="px-3 py-1 bg-blue-500/20 rounded-full text-blue-300 font-medium">
+                      {startWord}
+                    </span>
+                    {hops.filter(hop => hop.trim()).map((hop, index) => (
+                      <React.Fragment key={index}>
+                        <span className="text-white/40">→</span>
+                        <span className="px-3 py-1 bg-purple-500/20 rounded-full text-purple-300 font-medium">
+                          {hop}
+                        </span>
+                      </React.Fragment>
+                    ))}
+                    <span className="text-white/40">→</span>
+                    <span className="px-3 py-1 bg-green-500/20 rounded-full text-green-300 font-medium">
+                      {endWord}
+                    </span>
+                  </div>
+                </div>
+
                 <div className="bg-white/10 rounded-2xl p-4">
                   <div className="text-white/60 text-sm">Score Earned</div>
                   <div className="text-2xl font-bold text-yellow-400">
@@ -228,7 +291,8 @@ export default function Home() {
                   </button>
                   <button
                     onClick={getHint}
-                    disabled={isLoading || hintLoading || !startWord}
+                    disabled={isLoading || hintLoading || !startWord || lives <= 1}
+                    title={lives <= 1 ? "Not available with only 1 life left" : "Get a hint (costs 1 life)"}
                     className="px-3 py-1.5 bg-purple-500/20 backdrop-blur-sm text-purple-200 rounded-full text-sm hover:bg-purple-500/30 disabled:opacity-50 border border-purple-400/30 transition-all flex items-center space-x-1"
                   >
                     {hintLoading ? (
@@ -250,6 +314,7 @@ export default function Home() {
                   <button
                     onClick={getSolution}
                     disabled={isLoading || !startWord}
+                    title="Show complete solution (ends current game)"
                     className="px-3 py-1.5 bg-orange-500/20 backdrop-blur-sm text-orange-200 rounded-full text-sm hover:bg-orange-500/30 disabled:opacity-50 border border-orange-400/30 transition-all"
                   >
                     🔧 Solve
@@ -367,6 +432,12 @@ export default function Home() {
           )}
         </div>
       </div>
+      
+      {/* Onboarding Modal */}
+      <OnboardingModal 
+        isOpen={showOnboarding} 
+        onClose={handleCloseOnboarding} 
+      />
     </ErrorBoundary>
   );
 }

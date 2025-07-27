@@ -6,6 +6,7 @@ export interface GameState {
   isComplete: boolean;
   isLoading: boolean;
   error: string | null;
+  solution: string[];
   // Level system
   level: number;
   maxSteps: number; // 5 for level 1, 4 for level 2, etc.

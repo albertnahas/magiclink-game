@@ -11,11 +11,12 @@ const initialGameState: GameState = {
   isComplete: false,
   isLoading: false,
   error: null,
+  solution: [],
   // Level system
   level: 1,
   maxSteps: 1, // Level 1 = 1 step
   score: 0,
-  lives: 2,
+  lives: 3,
   streak: 0,
   totalGamesWon: 0,
 };
@@ -264,6 +265,7 @@ export const useGame = () => {
       if (data.chain) {
         setGameState(prev => ({
           ...prev,
+          solution: data.chain!,
           hops: data.chain!,
           currentStep: 5,
           isComplete: true,

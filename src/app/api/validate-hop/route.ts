@@ -38,6 +38,7 @@ And it must not be the same words.
 - physical/functional associations
 - utilitarian connections
 - Well-known pairings
+- common adjective
 - clever connections
 
 Return a JSON response with "valid" (true/false) and "explanation" (brief reason):
@@ -56,6 +57,7 @@ Valid connections include:
 - physical/functional associations
 - utilitarian connections
 - Well-known pairings
+- common adjective
 - clever connections
 
 The guess "${guess.trim()}" must have a clear, logical relationship to "${previous.trim()}".

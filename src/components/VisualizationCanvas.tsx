@@ -1,0 +1,183 @@
+'use client';
+
+// import { Canvas } from '@react-three/fiber';
+// import { Text } from '@react-three/drei';
+import { VisualizationCanvasProps } from '@/types/game';
+
+function WordNode({ 
+  text, 
+  position, 
+  color, 
+  isActive = false 
+}: {
+  text: string;
+  position: [number, number, number];
+  color: string;
+  isActive?: boolean;
+}) {
+  return (
+    <group position={position}>
+      <mesh>
+        <sphereGeometry args={[0.8, 32, 32]} />
+        <meshStandardMaterial 
+          color={color} 
+          emissive={isActive ? color : '#000000'} 
+          emissiveIntensity={isActive ? 0.2 : 0} 
+        />
+      </mesh>
+      <Text
+        position={[0, 0, 0.81]}
+        fontSize={0.3}
+        color="white"
+        anchorX="center"
+        anchorY="middle"
+        fontWeight="bold"
+      >
+        {text.toUpperCase()}
+      </Text>
+    </group>
+  );
+}
+
+function ConnectionLine({ 
+  start, 
+  end, 
+  isActive = false 
+}: {
+  start: [number, number, number];
+  end: [number, number, number];
+  isActive?: boolean;
+}) {
+  const midPoint: [number, number, number] = [
+    (start[0] + end[0]) / 2,
+    (start[1] + end[1]) / 2,
+    (start[2] + end[2]) / 2,
+  ];
+
+  const distance = Math.sqrt(
+    Math.pow(end[0] - start[0], 2) +
+    Math.pow(end[1] - start[1], 2) +
+    Math.pow(end[2] - start[2], 2)
+  );
+
+  return (
+    <mesh position={midPoint}>
+      <cylinderGeometry args={[isActive ? 0.05 : 0.02, isActive ? 0.05 : 0.02, distance, 8]} />
+      <meshStandardMaterial color={isActive ? '#8b5cf6' : '#d1d5db'} />
+    </mesh>
+  );
+}
+
+export const VisualizationCanvas: React.FC<VisualizationCanvasProps> = ({
+  startWord,
+  endWord,
+  hops,
+  currentStep,
+  isComplete,
+}) => {
+  const getNodeColor = (index: number) => {
+    if (index === 0) return 'bg-blue-500 text-white'; // Start - blue
+    if (index === 6) return 'bg-green-500 text-white'; // End - green
+    if (index - 1 < currentStep) return 'bg-purple-500 text-white'; // Completed hops - purple
+    if (index - 1 === currentStep) return 'bg-blue-500 text-white'; // Current hop - blue
+    return 'bg-gray-300 text-gray-600'; // Future hops - gray
+  };
+
+  const getNodeText = (index: number) => {
+    if (index === 0) return startWord;
+    if (index === 6) return endWord;
+    return hops[index - 1] || `Step ${index}`;
+  };
+
+  const getConnectionColor = (index: number) => {
+    return index < currentStep || isComplete ? 'bg-purple-400' : 'bg-gray-300';
+  };
+
+  return (
+    <div className="w-full bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+      <div className="p-6">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">Connection Path</h3>
+        
+        {/* Visual connection path */}
+        <div className="flex flex-col items-center space-y-4">
+          {/* Start word */}
+          <div className="flex flex-col items-center">
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center text-sm font-bold ${getNodeColor(0)}`}>
+              {startWord.charAt(0).toUpperCase()}
+            </div>
+            <div className="mt-2 text-center">
+              <div className="font-medium text-blue-600">{startWord.toUpperCase()}</div>
+              <div className="text-xs text-gray-500">Start</div>
+            </div>
+          </div>
+
+          {/* Connection lines and hops */}
+          {[0, 1, 2, 3, 4].map((hopIndex) => (
+            <div key={hopIndex} className="flex flex-col items-center">
+              {/* Connection line */}
+              <div className={`w-1 h-8 rounded-full transition-colors duration-300 ${getConnectionColor(hopIndex)}`}></div>
+              
+              {/* Hop node */}
+              <div className="flex flex-col items-center">
+                <div className={`w-16 h-16 rounded-full flex items-center justify-center text-sm font-bold transition-colors duration-300 ${getNodeColor(hopIndex + 1)}`}>
+                  {hops[hopIndex] ? hops[hopIndex].charAt(0).toUpperCase() : (hopIndex + 1)}
+                </div>
+                <div className="mt-2 text-center">
+                  <div className={`font-medium transition-colors duration-300 ${
+                    hopIndex < currentStep ? 'text-purple-600' : 
+                    hopIndex === currentStep ? 'text-blue-600' : 
+                    'text-gray-400'
+                  }`}>
+                    {hops[hopIndex] ? hops[hopIndex].toUpperCase() : `STEP ${hopIndex + 1}`}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {hopIndex < currentStep ? 'Completed' : 
+                     hopIndex === currentStep ? 'Current' : 
+                     'Pending'}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* Final connection to end word */}
+          <div className="flex flex-col items-center">
+            <div className={`w-1 h-8 rounded-full transition-colors duration-300 ${getConnectionColor(5)}`}></div>
+            
+            <div className="flex flex-col items-center">
+              <div className={`w-16 h-16 rounded-full flex items-center justify-center text-sm font-bold ${getNodeColor(6)}`}>
+                {endWord.charAt(0).toUpperCase()}
+              </div>
+              <div className="mt-2 text-center">
+                <div className="font-medium text-green-600">{endWord.toUpperCase()}</div>
+                <div className="text-xs text-gray-500">Target</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      {/* Progress indicator */}
+      <div className="px-6 pb-6">
+        <div className="flex justify-between items-center text-sm text-gray-600 mb-2">
+          <span>Progress</span>
+          <span>{currentStep} / 5 steps</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          {[0, 1, 2, 3, 4].map((step) => (
+            <div 
+              key={step}
+              className={`flex-1 h-2 rounded-full transition-colors duration-300 ${
+                step < currentStep 
+                  ? 'bg-purple-500' 
+                  : step === currentStep 
+                  ? 'bg-blue-500' 
+                  : 'bg-gray-300'
+              }`}
+            ></div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};

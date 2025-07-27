@@ -1,103 +1,227 @@
-import Image from "next/image";
+'use client';
+
+import { useGame } from '@/hooks/useGame';
+import { GameHeader } from '@/components/GameHeader';
+import { HopInput } from '@/components/HopInput';
+import { GameComplete } from '@/components/GameComplete';
+import { VisualizationCanvas } from '@/components/VisualizationCanvas';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const {
+    gameState,
+    validationLoading,
+    generateSeedWords,
+    validateHop,
+    getHint,
+    getSolution,
+    resetGame,
+    updateHop,
+    undoLastStep,
+  } = useGame();
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const {
+    startWord,
+    endWord,
+    currentStep,
+    hops,
+    isComplete,
+    isLoading,
+    error,
+  } = gameState;
+
+  const handleNewGame = () => {
+    resetGame();
+    generateSeedWords();
+  };
+
+  const handleSubmit = () => {
+    const currentHop = hops[currentStep];
+    if (currentHop.trim()) {
+      validateHop(currentStep, currentHop);
+    }
+  };
+
+  if (isComplete) {
+    return (
+      <ErrorBoundary>
+        <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-green-50">
+          <div className="container mx-auto px-4 py-8">
+            <div className="max-w-4xl mx-auto">
+              <GameComplete
+                startWord={startWord}
+                endWord={endWord}
+                hops={hops}
+                onNewGame={handleNewGame}
+              />
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </ErrorBoundary>
+    );
+  }
+
+  return (
+    <ErrorBoundary>
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+        <div className="container mx-auto px-4 py-8">
+          <div className="max-w-4xl mx-auto space-y-8">
+            
+            {/* Game Header */}
+            <GameHeader
+              startWord={startWord}
+              endWord={endWord}
+              isLoading={isLoading}
+              currentStep={currentStep}
+              onNewGame={handleNewGame}
+              onGetHint={getHint}
+              onGetSolution={getSolution}
+              onUndo={undoLastStep}
+            />
+
+            {/* Error Display */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 shadow-sm">
+                <div className="flex items-center space-x-2">
+                  <div className="text-red-500 text-xl">⚠️</div>
+                  <p className="text-red-700 font-medium">{error}</p>
+                </div>
+              </div>
+            )}
+
+            {/* Main Game Area */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              
+              {/* Left Column - Game Input */}
+              <div className="space-y-6">
+                
+                {/* Current Input */}
+                {!isLoading && !isComplete && (
+                  <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                    <div className="space-y-4">
+                      <div className="text-center">
+                        <h3 className="text-lg font-semibold text-gray-800 mb-2">
+                          Step {currentStep + 1} of 5
+                        </h3>
+                        <p className="text-gray-600">
+                          What connects to "{currentStep === 0 ? startWord : hops[currentStep - 1]}"?
+                        </p>
+                      </div>
+                      
+                      <HopInput
+                        value={hops[currentStep] || ''}
+                        onChange={(value) => updateHop(currentStep, value)}
+                        onSubmit={handleSubmit}
+                        placeholder={`What connects to "${currentStep === 0 ? startWord : hops[currentStep - 1]}"?`}
+                        disabled={isLoading || currentStep >= 5}
+                        isValidating={validationLoading === currentStep}
+                      />
+
+                      <button
+                        onClick={handleSubmit}
+                        disabled={!hops[currentStep]?.trim() || isLoading || validationLoading === currentStep}
+                        className="w-full px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg"
+                      >
+                        {validationLoading === currentStep ? (
+                          <div className="flex items-center justify-center space-x-2">
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            <span>Checking...</span>
+                          </div>
+                        ) : (
+                          'Submit Word'
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Progress Summary */}
+                {!isLoading && (
+                  <div className="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-4">Your Progress</h3>
+                    <div className="space-y-3">
+                      
+                      {/* Start Word */}
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
+                          <span className="text-white font-bold text-sm">S</span>
+                        </div>
+                        <span className="font-medium text-blue-600">{startWord.toUpperCase()}</span>
+                      </div>
+
+                      {/* Hops */}
+                      {hops.map((hop, index) => (
+                        <div key={index} className="flex items-center space-x-3">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            index < currentStep 
+                              ? 'bg-purple-500 text-white' 
+                              : index === currentStep 
+                              ? 'bg-blue-500 text-white' 
+                              : 'bg-gray-300 text-gray-600'
+                          }`}>
+                            <span className="font-bold text-sm">{index + 1}</span>
+                          </div>
+                          <span className={`${
+                            index < currentStep ? 'text-purple-600 font-medium' : 
+                            index === currentStep ? 'text-blue-600 font-medium' : 
+                            'text-gray-400'
+                          }`}>
+                            {hop ? hop.toUpperCase() : `Step ${index + 1}`}
+                          </span>
+                        </div>
+                      ))}
+
+                      {/* End Word */}
+                      <div className="flex items-center space-x-3">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
+                          <span className="text-white font-bold text-sm">T</span>
+                        </div>
+                        <span className="font-medium text-green-600">{endWord.toUpperCase()}</span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Seed Words Display on Mobile */}
+                <div className="lg:hidden bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                  <div className="flex justify-center items-center space-x-4">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600 bg-blue-50 px-4 py-3 rounded-lg border-2 border-blue-200">
+                        {startWord.toUpperCase()}
+                      </div>
+                      <div className="text-sm text-gray-500 mt-2">Start</div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-1">
+                      <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                      <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                      <div className="w-2 h-2 bg-gray-300 rounded-full"></div>
+                    </div>
+                    
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600 bg-green-50 px-4 py-3 rounded-lg border-2 border-green-200">
+                        {endWord.toUpperCase()}
+                      </div>
+                      <div className="text-sm text-gray-500 mt-2">Target</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column - Visualization */}
+              <div className="space-y-6">
+                <VisualizationCanvas
+                  startWord={startWord}
+                  endWord={endWord}
+                  hops={hops}
+                  currentStep={currentStep}
+                  isComplete={isComplete}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ErrorBoundary>
   );
 }

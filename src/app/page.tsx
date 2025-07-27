@@ -3,7 +3,6 @@
 import React from 'react';
 import { useGame } from '@/hooks/useGame';
 import { HopInput } from '@/components/HopInput';
-import { GameComplete } from '@/components/GameComplete';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 export default function Home() {

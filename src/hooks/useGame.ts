@@ -45,10 +45,11 @@ export const useGame = () => {
     setGameState(prev => ({ ...prev, isLoading: true, error: null }));
     
     try {
+      const currentLevel = gameState.level;
       const response = await fetch('/api/generate-seed', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ seedWord, level: gameState.level }),
+        body: JSON.stringify({ seedWord, level: currentLevel }),
       });
       
       if (!response.ok) {
@@ -79,7 +80,7 @@ export const useGame = () => {
         error: error instanceof Error ? error.message : 'Failed to generate seed words',
       }));
     }
-  }, []);
+  }, [gameState.level]);
 
   const validateHop = useCallback(async (index: number, guess: string) => {
     if (!guess.trim()) return;
@@ -235,7 +236,7 @@ export const useGame = () => {
     } finally {
       setHintLoading(false);
     }
-  }, [gameState.startWord, gameState.endWord, gameState.hops, gameState.currentStep]);
+  }, [gameState.startWord, gameState.endWord, gameState.hops, gameState.currentStep, gameState.maxSteps, gameState.lives]);
 
   const getSolution = useCallback(async () => {
     if (!gameState.startWord || !gameState.endWord) return;
@@ -306,7 +307,7 @@ export const useGame = () => {
       resetGame(false);
       generateSeedWords();
     }
-  }, [gameState.level, generateSeedWords]);
+  }, [gameState.level, resetGame, generateSeedWords]);
 
   const updateHop = useCallback((index: number, value: string) => {
     setGameState(prev => {

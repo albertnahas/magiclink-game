@@ -1,72 +1,7 @@
 'use client';
 
-// import { Canvas } from '@react-three/fiber';
-// import { Text } from '@react-three/drei';
+import React from 'react';
 import { VisualizationCanvasProps } from '@/types/game';
-
-function WordNode({ 
-  text, 
-  position, 
-  color, 
-  isActive = false 
-}: {
-  text: string;
-  position: [number, number, number];
-  color: string;
-  isActive?: boolean;
-}) {
-  return (
-    <group position={position}>
-      <mesh>
-        <sphereGeometry args={[0.8, 32, 32]} />
-        <meshStandardMaterial 
-          color={color} 
-          emissive={isActive ? color : '#000000'} 
-          emissiveIntensity={isActive ? 0.2 : 0} 
-        />
-      </mesh>
-      <Text
-        position={[0, 0, 0.81]}
-        fontSize={0.3}
-        color="white"
-        anchorX="center"
-        anchorY="middle"
-        fontWeight="bold"
-      >
-        {text.toUpperCase()}
-      </Text>
-    </group>
-  );
-}
-
-function ConnectionLine({ 
-  start, 
-  end, 
-  isActive = false 
-}: {
-  start: [number, number, number];
-  end: [number, number, number];
-  isActive?: boolean;
-}) {
-  const midPoint: [number, number, number] = [
-    (start[0] + end[0]) / 2,
-    (start[1] + end[1]) / 2,
-    (start[2] + end[2]) / 2,
-  ];
-
-  const distance = Math.sqrt(
-    Math.pow(end[0] - start[0], 2) +
-    Math.pow(end[1] - start[1], 2) +
-    Math.pow(end[2] - start[2], 2)
-  );
-
-  return (
-    <mesh position={midPoint}>
-      <cylinderGeometry args={[isActive ? 0.05 : 0.02, isActive ? 0.05 : 0.02, distance, 8]} />
-      <meshStandardMaterial color={isActive ? '#8b5cf6' : '#d1d5db'} />
-    </mesh>
-  );
-}
 
 export const VisualizationCanvas: React.FC<VisualizationCanvasProps> = ({
   startWord,
@@ -83,11 +18,6 @@ export const VisualizationCanvas: React.FC<VisualizationCanvasProps> = ({
     return 'bg-gray-300 text-gray-600'; // Future hops - gray
   };
 
-  const getNodeText = (index: number) => {
-    if (index === 0) return startWord;
-    if (index === 6) return endWord;
-    return hops[index - 1] || `Step ${index}`;
-  };
 
   const getConnectionColor = (index: number) => {
     return index < currentStep || isComplete ? 'bg-purple-400' : 'bg-gray-300';

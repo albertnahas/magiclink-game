@@ -26,13 +26,13 @@ export const HopInput: React.FC<HopInputProps> = ({
         onKeyDown={handleKeyDown}
         disabled={disabled || isValidating}
         placeholder={disabled ? '' : placeholder}
-        className="w-full px-4 py-3 text-lg border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none disabled:bg-gray-100 disabled:cursor-not-allowed transition-colors duration-200"
+        className="w-full px-6 py-4 text-lg bg-white/10 backdrop-blur-sm border border-white/20 rounded-2xl focus:border-blue-400/50 focus:bg-white/15 focus:outline-none focus:ring-2 focus:ring-blue-400/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-white placeholder-white/60"
         autoComplete="off"
         spellCheck="false"
       />
       {isValidating && (
-        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-          <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+        <div className="absolute right-4 top-1/2 transform -translate-y-1/2">
+          <div className="w-5 h-5 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
         </div>
       )}
     </div>

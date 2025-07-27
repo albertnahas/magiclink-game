@@ -7,11 +7,32 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json().catch(() => ({}));
     const seedWord = body.seedWord?.trim()?.toLowerCase();
+    const level = body.level || 1;
 
-    let userPrompt = 'Generate two words for a word connection game. They should be moderately challenging to connect - not too easy, not impossible. Return as JSON: {"start": "word1", "end": "word2"}';
+    // Define difficulty levels
+    const getDifficultyPrompt = (level: number) => {
+      switch(level) {
+        case 1:
+          return 'somewhat easy to connect but not immediately obvious, requiring a bit of thought';
+        case 2:
+          return 'moderately difficult to connect, requiring non-obvious logical relationships';
+        case 3:
+          return 'challenging to connect, requiring creative and lateral thinking';
+        case 4:
+          return 'very challenging to connect, with obscure or indirect relationships';
+        case 5:
+          return 'extremely challenging to connect, with highly abstract or tenuous relationships';
+        case 6:
+          return 'nearly impossible to connect, with words that are maximally unrelated and require extreme creativity';
+        default:
+          return 'challenging to connect, requiring creative thinking';
+      }
+    };
+
+    let userPrompt = `Generate two random words for a word connection game at difficulty level ${level}. They should be ${getDifficultyPrompt(level)}. Return as JSON: {"start": "word1", "end": "word2"}`;
     
     if (seedWord) {
-      userPrompt = `Generate a word connection game using "${seedWord}" as one of the words. Create another word that can be connected to "${seedWord}" through logical steps but is not obviously related. Choose whether to use "${seedWord}" as the start or end word. Return as JSON: {"start": "word1", "end": "word2"}`;
+      userPrompt = `Generate a word connection game using "${seedWord}" as one of the words at difficulty level ${level}. Create another word that is ${getDifficultyPrompt(level)} to connect to "${seedWord}". Choose whether to use "${seedWord}" as the start or end word. Return as JSON: {"start": "word1", "end": "word2"}`;
     }
 
     const completion = await openai.chat.completions.create({

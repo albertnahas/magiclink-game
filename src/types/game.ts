@@ -6,6 +6,13 @@ export interface GameState {
   isComplete: boolean;
   isLoading: boolean;
   error: string | null;
+  // Level system
+  level: number;
+  maxSteps: number; // 5 for level 1, 4 for level 2, etc.
+  score: number;
+  lives: number;
+  streak: number;
+  totalGamesWon: number;
 }
 
 export interface ValidationResponse {

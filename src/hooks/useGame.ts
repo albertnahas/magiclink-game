@@ -7,10 +7,33 @@ const initialGameState: GameState = {
   startWord: '',
   endWord: '',
   currentStep: 0,
-  hops: ['', '', '', '', ''],
+  hops: ['', '', '', '', '', ''],
   isComplete: false,
   isLoading: false,
   error: null,
+  // Level system
+  level: 1,
+  maxSteps: 1, // Level 1 = 1 step
+  score: 0,
+  lives: 2,
+  streak: 0,
+  totalGamesWon: 0,
+};
+
+// Helper functions for level system
+const getMaxStepsForLevel = (level: number): number => {
+  return level; // Level 1=1 step, Level 2=2 steps, ..., Level 6=6 steps
+};
+
+const getLivesForLevel = (level: number): number => {
+  return 1 + level; // Level 1=2 lives, Level 2=3 lives, etc.
+};
+
+const calculateScore = (level: number, stepsUsed: number, maxSteps: number): number => {
+  // Base score increases with level, bonus for using fewer steps
+  const baseScore = level * 100;
+  const stepBonus = (maxSteps - stepsUsed) * 20;
+  return baseScore + stepBonus;
 };
 
 export const useGame = () => {
@@ -25,7 +48,7 @@ export const useGame = () => {
       const response = await fetch('/api/generate-seed', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ seedWord }),
+        body: JSON.stringify({ seedWord, level: gameState.level }),
       });
       
       if (!response.ok) {
@@ -34,16 +57,21 @@ export const useGame = () => {
       
       const data: SeedResponse = await response.json();
       
-      setGameState(prev => ({
-        ...prev,
-        startWord: data.start,
-        endWord: data.end,
-        currentStep: 0,
-        hops: ['', '', '', '', ''],
-        isComplete: false,
-        isLoading: false,
-        error: null,
-      }));
+      setGameState(prev => {
+        const maxSteps = getMaxStepsForLevel(prev.level);
+        const newHops = Array(6).fill(''); // Always 6 for display, but only use maxSteps
+        return {
+          ...prev,
+          startWord: data.start,
+          endWord: data.end,
+          currentStep: 0,
+          hops: newHops,
+          maxSteps,
+          isComplete: false,
+          isLoading: false,
+          error: null,
+        };
+      });
     } catch (error) {
       setGameState(prev => ({
         ...prev,
@@ -83,21 +111,59 @@ export const useGame = () => {
           newHops[index] = guess.trim().toLowerCase();
           
           const newCurrentStep = index + 1;
-          const isComplete = newCurrentStep >= 5;
+          const isComplete = newCurrentStep >= prev.maxSteps;
+          
+          let newScore = prev.score;
+          let newLevel = prev.level;
+          let newStreak = prev.streak;
+          let newTotalGamesWon = prev.totalGamesWon;
+          let newLives = prev.lives;
+          
+          // If puzzle completed
+          if (isComplete) {
+            const levelScore = calculateScore(prev.level, newCurrentStep, prev.maxSteps);
+            newScore += levelScore;
+            newStreak += 1;
+            newTotalGamesWon += 1;
+            
+            // Level up logic
+            if (prev.level < 6) {
+              newLevel = prev.level + 1;
+              newLives = getLivesForLevel(newLevel);
+            }
+          }
           
           return {
             ...prev,
             hops: newHops,
             currentStep: newCurrentStep,
             isComplete,
+            score: newScore,
+            level: newLevel,
+            streak: newStreak,
+            totalGamesWon: newTotalGamesWon,
+            lives: newLives,
             error: null,
           };
         });
       } else {
-        setGameState(prev => ({
-          ...prev,
-          error: data.message || 'Invalid hop',
-        }));
+        // Invalid hop - lose a life
+        setGameState(prev => {
+          const newLives = Math.max(0, prev.lives - 1);
+          let newStreak = prev.streak;
+          
+          // Reset streak if no lives left
+          if (newLives === 0) {
+            newStreak = 0;
+          }
+          
+          return {
+            ...prev,
+            lives: newLives,
+            streak: newStreak,
+            error: data.message || 'Invalid hop - Lost a life!',
+          };
+        });
       }
     } catch (error) {
       setGameState(prev => ({
@@ -110,7 +176,7 @@ export const useGame = () => {
   }, [gameState.startWord, gameState.endWord, gameState.hops]);
 
   const getHint = useCallback(async () => {
-    if (!gameState.startWord || !gameState.endWord || gameState.currentStep >= 5) return;
+    if (!gameState.startWord || !gameState.endWord || gameState.currentStep >= gameState.maxSteps || gameState.lives <= 0) return;
     
     setHintLoading(true);
     setGameState(prev => ({ ...prev, error: null }));
@@ -139,13 +205,22 @@ export const useGame = () => {
           newHops[prev.currentStep] = data.hint;
           
           const newCurrentStep = prev.currentStep + 1;
-          const isComplete = newCurrentStep >= 5;
+          const isComplete = newCurrentStep >= prev.maxSteps;
+          const newLives = Math.max(0, prev.lives - 1); // Lose a life for hint
+          
+          let newStreak = prev.streak;
+          // Reset streak if no lives left
+          if (newLives === 0) {
+            newStreak = 0;
+          }
           
           return {
             ...prev,
             hops: newHops,
             currentStep: newCurrentStep,
             isComplete,
+            lives: newLives,
+            streak: newStreak,
             error: null,
           };
         });
@@ -204,11 +279,34 @@ export const useGame = () => {
     }
   }, [gameState.startWord, gameState.endWord]);
 
-  const resetGame = useCallback(() => {
-    setGameState(initialGameState);
+  const resetGame = useCallback((fullReset: boolean = false) => {
+    if (fullReset) {
+      // Complete reset to level 1
+      setGameState(initialGameState);
+    } else {
+      // Just reset current puzzle, keep level progress
+      setGameState(prev => ({
+        ...prev,
+        startWord: '',
+        endWord: '',
+        currentStep: 0,
+        hops: ['', '', '', '', '', ''],
+        isComplete: false,
+        isLoading: false,
+        error: null,
+      }));
+    }
     setValidationLoading(null);
     setHintLoading(false);
   }, []);
+
+  // Add a function to start next level
+  const startNextLevel = useCallback(() => {
+    if (gameState.level < 6) {
+      resetGame(false);
+      generateSeedWords();
+    }
+  }, [gameState.level, generateSeedWords]);
 
   const updateHop = useCallback((index: number, value: string) => {
     setGameState(prev => {
@@ -256,6 +354,7 @@ export const useGame = () => {
     getHint,
     getSolution,
     resetGame,
+    startNextLevel,
     updateHop,
     undoLastStep,
   };

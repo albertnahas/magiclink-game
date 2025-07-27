@@ -46,7 +46,7 @@ Answer exactly "yes" or "no" only.`;
       messages: [
         { 
           role: 'system', 
-          content: 'You are a strict word connection validator. Focus only on the direct relationship between the two given words. Ignore the target word except for context. Respond with only "yes" or "no".' 
+          content: 'You are a strict word connection validator. Focus on the direct relationship between the two given words. And if the guess has a connection to the target word, do not accept the same words, respond with only "yes" or "no".' 
         },
         { 
           role: 'user', 

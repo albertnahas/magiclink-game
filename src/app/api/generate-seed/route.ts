@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
-      temperature: 0.8,
+      temperature: 1,
       messages: [
         { 
           role: 'system', 

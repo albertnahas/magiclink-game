@@ -43,6 +43,7 @@ export interface GameHeaderProps {
   startWord: string;
   endWord: string;
   isLoading: boolean;
+  hintLoading: boolean;
   currentStep: number;
   onNewGame: () => void;
   onGetHint: () => void;

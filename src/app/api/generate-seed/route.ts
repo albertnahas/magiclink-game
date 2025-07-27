@@ -5,6 +5,15 @@ export async function POST(request: NextRequest) {
   try {
     validateEnvironment();
 
+    const body = await request.json().catch(() => ({}));
+    const seedWord = body.seedWord?.trim()?.toLowerCase();
+
+    let userPrompt = 'Generate two words for a word connection game. They should be moderately challenging to connect - not too easy, not impossible. Return as JSON: {"start": "word1", "end": "word2"}';
+    
+    if (seedWord) {
+      userPrompt = `Generate a word connection game using "${seedWord}" as one of the words. Create another word that can be connected to "${seedWord}" through logical steps but is not obviously related. Choose whether to use "${seedWord}" as the start or end word. Return as JSON: {"start": "word1", "end": "word2"}`;
+    }
+
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
       temperature: 0.8,
@@ -15,7 +24,7 @@ export async function POST(request: NextRequest) {
         },
         { 
           role: 'user', 
-          content: 'Generate two words for a word connection game. They should be moderately challenging to connect - not too easy, not impossible. Return as JSON: {"start": "word1", "end": "word2"}' 
+          content: userPrompt
         }
       ],
       max_tokens: 50,

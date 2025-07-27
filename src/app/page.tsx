@@ -11,6 +11,7 @@ export default function Home() {
   const {
     gameState,
     validationLoading,
+    hintLoading,
     generateSeedWords,
     validateHop,
     getHint,
@@ -72,6 +73,7 @@ export default function Home() {
               startWord={startWord}
               endWord={endWord}
               isLoading={isLoading}
+              hintLoading={hintLoading}
               currentStep={currentStep}
               onNewGame={handleNewGame}
               onGetHint={getHint}

@@ -7,6 +7,7 @@ export const GameHeader: React.FC<GameHeaderProps> = ({
   startWord,
   endWord,
   isLoading,
+  hintLoading,
   currentStep,
   onNewGame,
   onGetHint,
@@ -80,10 +81,17 @@ export const GameHeader: React.FC<GameHeaderProps> = ({
         </button>
         <button
           onClick={onGetHint}
-          disabled={isLoading || !startWord || !endWord}
-          className="px-3 py-1.5 text-sm bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 border border-purple-300"
+          disabled={isLoading || hintLoading || !startWord || !endWord}
+          className="px-3 py-1.5 text-sm bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 border border-purple-300 flex items-center space-x-1"
         >
-          Hint
+          {hintLoading ? (
+            <>
+              <div className="w-3 h-3 border border-purple-700 border-t-transparent rounded-full animate-spin"></div>
+              <span>Loading...</span>
+            </>
+          ) : (
+            <span>Hint</span>
+          )}
         </button>
         <button
           onClick={onUndo}
@@ -138,10 +146,20 @@ export const GameHeader: React.FC<GameHeaderProps> = ({
               </button>
               <button
                 onClick={() => handleButtonClick(onGetHint)}
-                disabled={isLoading || !startWord || !endWord}
-                className="w-full px-4 py-3 text-left bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 border border-purple-300"
+                disabled={isLoading || hintLoading || !startWord || !endWord}
+                className="w-full px-4 py-3 text-left bg-purple-100 text-purple-700 rounded-md hover:bg-purple-200 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 border border-purple-300 flex items-center space-x-2"
               >
-                💡 Get Hint
+                {hintLoading ? (
+                  <>
+                    <div className="w-4 h-4 border border-purple-700 border-t-transparent rounded-full animate-spin"></div>
+                    <span>Getting Hint...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>💡</span>
+                    <span>Get Hint</span>
+                  </>
+                )}
               </button>
               <button
                 onClick={() => handleButtonClick(onUndo)}

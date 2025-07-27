@@ -16,14 +16,16 @@ const initialGameState: GameState = {
 export const useGame = () => {
   const [gameState, setGameState] = useState<GameState>(initialGameState);
   const [validationLoading, setValidationLoading] = useState<number | null>(null);
+  const [hintLoading, setHintLoading] = useState(false);
 
-  const generateSeedWords = useCallback(async () => {
+  const generateSeedWords = useCallback(async (seedWord?: string) => {
     setGameState(prev => ({ ...prev, isLoading: true, error: null }));
     
     try {
       const response = await fetch('/api/generate-seed', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ seedWord }),
       });
       
       if (!response.ok) {
@@ -110,7 +112,8 @@ export const useGame = () => {
   const getHint = useCallback(async () => {
     if (!gameState.startWord || !gameState.endWord || gameState.currentStep >= 5) return;
     
-    setGameState(prev => ({ ...prev, isLoading: true, error: null }));
+    setHintLoading(true);
+    setGameState(prev => ({ ...prev, error: null }));
     
     try {
       const response = await fetch('/api/hint', {
@@ -143,7 +146,6 @@ export const useGame = () => {
             hops: newHops,
             currentStep: newCurrentStep,
             isComplete,
-            isLoading: false,
             error: null,
           };
         });
@@ -153,9 +155,10 @@ export const useGame = () => {
     } catch (error) {
       setGameState(prev => ({
         ...prev,
-        isLoading: false,
         error: error instanceof Error ? error.message : 'Failed to get hint',
       }));
+    } finally {
+      setHintLoading(false);
     }
   }, [gameState.startWord, gameState.endWord, gameState.hops, gameState.currentStep]);
 
@@ -204,6 +207,7 @@ export const useGame = () => {
   const resetGame = useCallback(() => {
     setGameState(initialGameState);
     setValidationLoading(null);
+    setHintLoading(false);
   }, []);
 
   const updateHop = useCallback((index: number, value: string) => {
@@ -246,6 +250,7 @@ export const useGame = () => {
   return {
     gameState,
     validationLoading,
+    hintLoading,
     generateSeedWords,
     validateHop,
     getHint,

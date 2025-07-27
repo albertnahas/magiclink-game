@@ -2,6 +2,8 @@
 
 An interactive word connection game where players bridge two words using exactly 5 intermediate steps, powered by OpenAI's GPT-4o-mini for intelligent validation and hints.
 
+https://magiclink-gamee.vercel.app
+
 ## ✨ Features
 
 - **AI-Powered Gameplay**: OpenAI integration for word validation and intelligent hints

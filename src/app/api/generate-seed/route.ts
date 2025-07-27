@@ -9,6 +9,18 @@ export async function POST(request: NextRequest) {
     const seedWord = body.seedWord?.trim()?.toLowerCase();
     const level = body.level || 1;
 
+    // Get seed from URL search params or generate random seed
+    const url = new URL(request.url);
+    const seedParam = url.searchParams.get('seed');
+    
+    const generateRandomSeed = () => {
+      const randomBytes = new Uint32Array(1);
+      crypto.getRandomValues(randomBytes);
+      return randomBytes[0].toString(36); // Convert to base-36 string
+    };
+
+    const randomSeed = seedParam || (seedWord ? null : generateRandomSeed());
+
     // Define difficulty levels
     const getDifficultyPrompt = (level: number) => {
       switch(level) {
@@ -29,10 +41,12 @@ export async function POST(request: NextRequest) {
       }
     };
 
-    let userPrompt = `Generate two random words for a word connection game at difficulty level ${level}. They should be ${getDifficultyPrompt(level)}. Return as JSON: {"start": "word1", "end": "word2"}`;
+    let userPrompt;
     
     if (seedWord) {
       userPrompt = `Generate a word connection game using "${seedWord}" as one of the words at difficulty level ${level}. Create another word that is ${getDifficultyPrompt(level)} to connect to "${seedWord}". Choose whether to use "${seedWord}" as the start or end word. Return as JSON: {"start": "word1", "end": "word2"}`;
+    } else {
+      userPrompt = `Generate two random words for a word connection game at difficulty level ${level} using seed ${randomSeed}. They should be ${getDifficultyPrompt(level)}. Use the seed to ensure consistent results for the same seed value. Return as JSON: {"start": "word1", "end": "word2"}`;
     }
 
     const completion = await openai.chat.completions.create({

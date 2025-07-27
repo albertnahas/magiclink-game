@@ -4,6 +4,7 @@ import { openai, validateEnvironment } from '@/lib/openai';
 interface SolveRequest {
   start: string;
   end: string;
+  steps?: number;
 }
 
 export async function POST(request: NextRequest) {
@@ -11,7 +12,7 @@ export async function POST(request: NextRequest) {
     validateEnvironment();
     
     const body: SolveRequest = await request.json();
-    const { start, end } = body;
+    const { start, end, steps = 6 } = body;
 
     if (!start || !end) {
       return NextResponse.json(
@@ -20,14 +21,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const prompt = `Connect "${start}" to "${end}" with exactly 5 intermediate words.
+    const prompt = `Connect "${start}" to "${end}" with exactly ${steps} intermediate words.
 
 CRITICAL REQUIREMENTS:
-- Return ONLY a JSON array with exactly 5 strings
+- Return ONLY a JSON array with exactly ${steps} strings
 - No explanations, no markdown, no extra text
 - Each word should logically connect to the next
+- The final word (step ${steps}) MUST have a DIRECT, clear connection to the target "${end}"
+- The final connection should be obvious and strong (synonyms, strong category relationships, clear associations, well-known pairings)
 
-Format: ["word1", "word2", "word3", "word4", "word5"]
+Format: ${JSON.stringify(Array.from({length: steps}, (_, i) => `word${i+1}`))}
 
 Connection path from "${start}" to "${end}":`;
 
@@ -37,7 +40,7 @@ Connection path from "${start}" to "${end}":`;
       messages: [
         { 
           role: 'system', 
-          content: 'You are a word connection expert. Respond ONLY with valid JSON arrays of exactly 5 words. No explanations or markdown.' 
+          content: `You are a word connection expert. Respond ONLY with valid JSON arrays of exactly ${steps} words. No explanations or markdown. Ensure the final word has a DIRECT, obvious connection to the target word.` 
         },
         { 
           role: 'user', 
@@ -74,17 +77,17 @@ Connection path from "${start}" to "${end}":`;
       throw new Error(`Chain must be an array, got ${typeof chain}`);
     }
 
-    if (chain.length !== 5) {
-      console.error(`Chain has wrong length: ${chain.length}, expected 5. Chain:`, chain);
+    if (chain.length !== steps) {
+      console.error(`Chain has wrong length: ${chain.length}, expected ${steps}. Chain:`, chain);
       
-      if (chain.length > 5) {
-        chain = chain.slice(0, 5);
-        console.log('Truncated chain to first 5 elements:', chain);
-      } else if (chain.length < 5) {
-        while (chain.length < 5) {
+      if (chain.length > steps) {
+        chain = chain.slice(0, steps);
+        console.log(`Truncated chain to first ${steps} elements:`, chain);
+      } else if (chain.length < steps) {
+        while (chain.length < steps) {
           chain.push(`step${chain.length + 1}`);
         }
-        console.log('Padded chain to 5 elements:', chain);
+        console.log(`Padded chain to ${steps} elements:`, chain);
       }
     }
 

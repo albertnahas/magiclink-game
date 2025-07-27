@@ -17,6 +17,7 @@ export interface GameState {
 
 export interface ValidationResponse {
   valid: boolean;
+  explanation?: string;
   message?: string;
   error?: string;
 }

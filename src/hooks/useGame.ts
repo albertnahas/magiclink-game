@@ -97,6 +97,7 @@ export const useGame = () => {
           previous,
           guess: guess.trim(),
           target: gameState.endWord,
+          isFinalStep: index === gameState.maxSteps - 1,
         }),
       });
       
@@ -177,7 +178,7 @@ export const useGame = () => {
   }, [gameState.startWord, gameState.endWord, gameState.hops]);
 
   const getHint = useCallback(async () => {
-    if (!gameState.startWord || !gameState.endWord || gameState.currentStep >= gameState.maxSteps || gameState.lives <= 0) return;
+    if (!gameState.startWord || !gameState.endWord || gameState.currentStep >= gameState.maxSteps || gameState.lives <= 1) return;
     
     setHintLoading(true);
     setGameState(prev => ({ ...prev, error: null }));
@@ -250,6 +251,7 @@ export const useGame = () => {
         body: JSON.stringify({
           start: gameState.startWord,
           end: gameState.endWord,
+          steps: gameState.maxSteps,
         }),
       });
       

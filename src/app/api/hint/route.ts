@@ -24,21 +24,22 @@ export async function POST(request: NextRequest) {
 
     const previousWord = currentStep === 0 ? start : currentHops[currentStep - 1];
     
-    const prompt = `Connect "${previousWord}" to "${end}" with exactly 5 intermediate words.
+    const prompt = `Find a word that connects "${previousWord}" and helps progress toward "${end}".
 
 Context:
 - Starting word: "${start}"
 - Target word: "${end}"
 - Current progress: ${currentHops.slice(0, currentStep).join(' → ')}
-- Need next word after: "${previousWord}"
+- Previous word: "${previousWord}"
 
-Requirements:
+CRITICAL REQUIREMENTS:
+- The word MUST have a clear, logical connection to "${previousWord}"
+- The word MUST also help bridge toward the target "${end}"
+- Think of words that relate to BOTH the previous word AND the target
 - Return ONLY one word
-- The word should logically connect to "${previousWord}"
-- The word should help progress toward "${end}"
 - No explanations, just the single word
 
-Next word:`;
+Next connecting word:`;
 
     const completion = await openai.chat.completions.create({
       model: 'gpt-4o-mini',
@@ -46,7 +47,7 @@ Next word:`;
       messages: [
         { 
           role: 'system', 
-          content: 'You are a helpful word game assistant. Respond with only a single word that makes a logical connection.' 
+          content: 'You are a word connection expert. Find words that connect to the previous word AND bridge toward the target. Respond with only a single word that has clear connections to both.' 
         },
         { 
           role: 'user', 

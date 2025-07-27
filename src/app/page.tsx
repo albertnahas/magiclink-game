@@ -167,6 +167,7 @@ export default function Home() {
               <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
                 MagicLink
               </h1>
+              <p className="text-sm text-white/60 mt-1">Connect words through logical steps</p>
             </div>
             
             {/* Game Stats */}
